@@ -42,6 +42,7 @@ import org.json.JSONArray
 import java.net.URL
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -565,17 +566,210 @@ fun Day6ScaffoldPractice() {
         ) {
             when (selectedTab) {
                 0 ->  ContactListFromNetwork()
-                1 -> Text("Search Screen", style = MaterialTheme.typography.headlineMedium)
-                2 -> Text("Profile Screen", style = MaterialTheme.typography.headlineMedium)
+                1 -> SearchScreen()
+                2 -> ProfileScreen()
             }
         }
     }
 }
+//@Composable
+//fun HomeScreen() {
+//    LazyColumn(
+//        contentPadding = PaddingValues(16.dp),
+//        verticalArrangement = Arrangement.spacedBy(8.dp)
+//    ) {
+//        items(10) { index ->
+//            Card(modifier = Modifier.fillMaxWidth()) {
+//                Text(
+//                    "Home Item $index",
+//                    modifier = Modifier.padding(16.dp)
+//                )
+//            }
+//        }
+//    }
+//}
+
+@Composable
+fun SearchScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text("Search", style = MaterialTheme.typography.headlineMedium)
+        // Add search functionality
+    }
+}
+
+@Composable
+fun ProfileScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text("Profile", style = MaterialTheme.typography.headlineMedium)
+        Text("Name: John Doe")
+        Text("Email: john@example.com")
+    }
+}
+
+
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewDay6() {
+//    LayoutPracticeTheme {
+//        Day6ScaffoldPractice()
+//    }
+//}
+
+
+/*
+* Notes App
+* */
+
+
+data class Note(val id: Int, val title: String, val content: String)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NotesApp() {
+//    notes for storing notes , selectedTab for tab selection, showDialog for dialog visibility
+    val notes = remember { mutableStateListOf<Note>() }
+    var selectedTab by remember { mutableStateOf(0) }
+    var showDialog by remember { mutableStateOf(false) }
+
+    Scaffold(
+//        top app bar with title , bottom navigation bar with tabs, and floating action button to add notes
+        topBar = {
+            TopAppBar(
+                title = { Text("Notes App") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White
+                )
+            )
+        },
+//        bottom navigation bar with "Notes" and "Favorites" tabs
+        bottomBar = {
+//            navigation bar is used for bottom navigation
+            NavigationBar {
+//                navigation bar item for "Notes" tab which is selected when selectedTab is 0
+                NavigationBarItem(
+                    icon = { Icon(Icons.AutoMirrored.Filled.List, "Notes") },
+                    label = { Text("Notes") },
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Star, "Favorites") },
+                    label = { Text("Favorites") },
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 }
+                )
+            }
+        },
+//        floating action button to show add note dialog
+        floatingActionButton = {
+            FloatingActionButton(onClick = { showDialog = true }) {
+                Icon(Icons.Filled.Add, "Add Note")
+            }
+        }
+    ) { paddingValues ->
+//        padding values from scaffold and scaffold content is a box that fills max size with padding
+        Box(modifier = Modifier.padding(paddingValues)) {
+            if (notes.isEmpty()) {
+//                logic here is to show message when there are no notes then display notes in lazy column
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No notes yet. Tap + to add one!")
+                }
+            } else {
+//                so if there are notes display them in a lazy column with padding and spacing and items for each note
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(notes) { note ->
+//                        here item working like a card with title and content of the note
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+//                            here column for title and content with padding
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    note.title,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Text(
+                                    note.content,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    maxLines = 2
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+//onAdd for adding new note to the notes list and closing dialog and onDismiss for closing dialog without adding note
+    if (showDialog) {
+        AddNoteDialog(
+            onDismiss = { showDialog = false },
+            onAdd = { title, content ->
+                notes.add(Note(notes.size, title, content))
+                showDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun AddNoteDialog(onDismiss: () -> Unit, onAdd: (String, String) -> Unit) {
+//    here title and content for storing user input
+    var title by remember { mutableStateOf("") }
+    var content by remember { mutableStateOf("") }
+//here alert dialog for adding note with title and content text fields and add and cancel buttons
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add Note") },
+        text = {
+            Column {
+//                onValueChange updates title and content variables as user types
+                TextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Title") }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                TextField(
+                    value = content,
+                    onValueChange = { content = it },
+                    label = { Text("Content") }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onAdd(title, content) }) {
+                Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewDay6() {
+fun PreviewNotesApp() {
     LayoutPracticeTheme {
-        Day6ScaffoldPractice()
+        NotesApp()
     }
 }
