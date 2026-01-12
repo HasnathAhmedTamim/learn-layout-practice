@@ -41,6 +41,10 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import java.net.URL
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -499,12 +503,79 @@ fun ContactListFromNetwork(url: String = "https://jsonplaceholder.typicode.com/u
 //    }
 //}
 
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewDay5() {
+//    LayoutPracticeTheme {
+////        Day5ScrollingLists()
+////        ContactList()
+//        ContactListFromNetwork()
+//    }
+//}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Day6ScaffoldPractice() {
+    var selectedTab by remember { mutableStateOf(0) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("My App") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
+        },
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Home, "Home") },
+                    label = { Text("Home") },
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Search, "Search") },
+                    label = { Text("Search") },
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Person, "Profile") },
+                    label = { Text("Profile") },
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 }
+                )
+            }
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { }) {
+                Icon(Icons.Filled.Add, "Add")
+            }
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentAlignment = Alignment.Center
+        ) {
+            when (selectedTab) {
+                0 ->  ContactListFromNetwork()
+                1 -> Text("Search Screen", style = MaterialTheme.typography.headlineMedium)
+                2 -> Text("Profile Screen", style = MaterialTheme.typography.headlineMedium)
+            }
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
-fun PreviewDay5() {
+fun PreviewDay6() {
     LayoutPracticeTheme {
-//        Day5ScrollingLists()
-//        ContactList()
-        ContactListFromNetwork()
+        Day6ScaffoldPractice()
     }
 }
