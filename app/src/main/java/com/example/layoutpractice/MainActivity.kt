@@ -216,7 +216,7 @@ fun Day3RowAndAlignment() {
                 .fillMaxWidth()
                 .height(100.dp)
                 .background(Color(0xFFF3E5F5)),
-            horizontalArrangement = Arrangement.End,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("Center Aligned")
