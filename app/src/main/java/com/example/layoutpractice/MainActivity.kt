@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -26,12 +27,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.layoutpractice.ui.theme.LayoutPracticeTheme
+
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import java.net.URL
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -428,11 +436,75 @@ fun Day5ScrollingLists() {
         }
     }
 }
+//data class Contact(val name: String, val phone: String)
+suspend fun fetchContactsFromUrl(url: String): List<Contact> = withContext(Dispatchers.IO) {
+    try {
+        val json = URL(url).readText()
+        val arr = JSONArray(json)
+        val list = mutableListOf<Contact>()
+        for (i in 0 until arr.length()) {
+            val obj = arr.getJSONObject(i)
+            val name = obj.optString("name")
+            val phone = obj.optString("phone")
+            if (name.isNotEmpty()) list.add(Contact(name, phone))
+        }
+        list
+    } catch (e: Exception) {
+        emptyList<Contact>()
+    }
+}
+
+@Composable
+fun ContactListFromNetwork(url: String = "https://jsonplaceholder.typicode.com/users") {
+    val contacts by produceState(initialValue = emptyList<Contact>(), key1 = url) {
+        value = fetchContactsFromUrl(url)
+    }
+
+    LazyColumn(
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(contacts) { contact ->
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(contact.name, style = MaterialTheme.typography.titleMedium)
+                    Text(contact.phone, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        }
+    }
+}
+//@Composable
+//fun ContactList() {
+//    val contacts = listOf(
+//        Contact("Alice", "123-456-7890"),
+//        Contact("Bob", "234-567-8901"),
+//        Contact("Charlie", "345-678-9012"),
+//        Contact("Diana", "456-789-0123"),
+//        Contact("Eve", "567-890-1234")
+//    )
+//
+//    LazyColumn(
+//        contentPadding = PaddingValues(16.dp),
+//        verticalArrangement = Arrangement.spacedBy(8.dp)
+//    ) {
+//        items(contacts) { contact ->
+//            Card(modifier = Modifier.fillMaxWidth()) {
+//                Column(modifier = Modifier.padding(16.dp)) {
+//                    Text(contact.name, style = MaterialTheme.typography.titleMedium)
+//                    Text(contact.phone, style = MaterialTheme.typography.bodyMedium)
+//                }
+//            }
+//        }
+//    }
+//}
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewDay5() {
     LayoutPracticeTheme {
-        Day5ScrollingLists()
+//        Day5ScrollingLists()
+//        ContactList()
+        ContactListFromNetwork()
     }
 }
