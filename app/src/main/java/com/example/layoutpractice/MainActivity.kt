@@ -1,5 +1,7 @@
 package com.example.layoutpractice
 
+
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -46,6 +48,11 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import kotlin.compareTo
+import kotlin.dec
+import kotlin.inc
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -766,10 +773,147 @@ fun AddNoteDialog(onDismiss: () -> Unit, onAdd: (String, String) -> Unit) {
     )
 }
 
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewNotesApp() {
+//    LayoutPracticeTheme {
+//        NotesApp()
+//    }
+//}
+
+
+//State
+@Composable
+fun WaterCounterSimple() {
+//     i can use here rememberSavable to save state across configuration changes because remember state lost on recomposition
+    var count by remember { mutableStateOf(0) }
+    var isRemoving by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFE0F7FA))
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text("You have had $count glasses", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Show Add button only while not in removing mode
+        if (!isRemoving) {
+            Button(
+                onClick = {
+                    if (count < 10) {
+                        count++
+                        if (count == 10) isRemoving = true
+                    }
+                },
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text("Add one")
+            }
+        } else {
+            // Removing mode: show Remove button until count reaches 0
+            Text("Reached 10 — remove one by one", style = MaterialTheme.typography.bodyLarge)
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = {
+                    if (count > 0) {
+                        count--
+                        if (count == 0) isRemoving = false
+                    }
+                },
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text("Remove one")
+            }
+        }
+    }
+}
+//@Preview
+//@Composable
+//fun PreviewWaterCounter(){
+//    LayoutPracticeTheme {
+//        WaterCounterSimple()
+//    }
+//}
+
+
+/*
+* Stateless vs stateful in Compose:
+StatelessCounter:
+* does not hold state; receives the current count
+* and event callbacks (e.g. onIncrement, onDecrement)
+* and renders UI purely from those inputs.
+*
+StatefulCounter: owns the state (using rememberSaveable),
+* implements the increment/decrement rules,
+* and delegates UI to StatelessCounter.
+*
+
+* */
+
+
+@Composable
+fun StatelessCounter(
+    count: Int,
+    isRemoving: Boolean,
+    onIncrement: () -> Unit,
+    onDecrement: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("You have had $count glasses", style = MaterialTheme.typography.headlineMedium)
+        Spacer(Modifier.height(12.dp))
+
+        // Show Add only when not in removing mode and count < 10
+        if (!isRemoving && count < 10) {
+            Button(onClick = onIncrement, modifier = Modifier.padding(8.dp)) {
+                Text("Add one")
+            }
+        } else {
+            Text("Removing mode — remove one by one", style = MaterialTheme.typography.bodyLarge)
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = onDecrement, modifier = Modifier.padding(8.dp)) {
+                Text("Remove one")
+            }
+        }
+    }
+}
+
+@Composable
+fun StatefulCounter() {
+    var count by rememberSaveable { mutableStateOf(0) }
+    var isRemoving by rememberSaveable { mutableStateOf(false) }
+
+    StatelessCounter(
+        count = count,
+        isRemoving = isRemoving,
+        onIncrement = {
+            // only allow increment when not in removing mode
+            if (!isRemoving && count < 10) {
+                count = (count + 1).coerceAtMost(10)
+                if (count == 10) isRemoving = true // enter removing mode at 10
+            }
+        },
+        onDecrement = {
+            // only allow decrement when in removing mode
+            if (isRemoving && count > 0) {
+                count = (count - 1).coerceAtLeast(0)
+                if (count == 0) isRemoving = false // exit removing mode at 0
+            }
+        }
+    )
+}
 @Preview(showBackground = true)
 @Composable
-fun PreviewNotesApp() {
-    LayoutPracticeTheme {
-        NotesApp()
+fun PreviewStatefulCounter() {
+    MaterialTheme {
+        StatefulCounter()
     }
 }
